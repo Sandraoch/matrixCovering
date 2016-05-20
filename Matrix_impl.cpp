@@ -191,7 +191,7 @@ Matrix::Matrix_t Matrix::getPreparedMatrix()
 
 void Matrix::reduceAsColumns()
 {
-
+//TODO: make it work
 }
 
 std::vector<size_t> Matrix::getReducingColumns( const Matrix_t &m )
