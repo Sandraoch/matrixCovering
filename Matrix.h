@@ -2,11 +2,12 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 #include <vector>
+#include <cstdint>
 
 class Ellement_t {
 public:
 	size_t row, col;
-	unsigned char value;
+    uint8_t value;
 	Ellement_t(size_t row, size_t col, unsigned char val);
 };
 

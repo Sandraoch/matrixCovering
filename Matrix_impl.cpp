@@ -68,7 +68,7 @@ Matrix::Matrix(std::string filePath)
 void Matrix::prepare()
 {
     if (!mPrepared.size() || !mPrepared.at(0).size())
-        throw std::logic_error("Empty matrix ");
+        throw std::logic_error( "Empty matrix " );
 
     auto kernel = getKernelRows( mPrepared );
     preparedRows.insert( preparedRows.end(), kernel.begin(), kernel.end() );
