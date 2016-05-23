@@ -18,7 +18,7 @@ Matrix::Matrix(std::string filePath)
 {
 	std::ifstream ifS( filePath );
 	if( !ifS.is_open())
-		throw std::runtime_error(filePath + " is not valid file ");
+        throw std::runtime_error(filePath + " is not valid file path");
 	
 	std::string tempStrRow;
 
@@ -199,6 +199,8 @@ void Matrix::reduceAsColumns()
         std::cerr << (mPrepared[0][reduce].col + 1) << '\t';
     std::cerr << std::endl;
 #endif //DEBUG_MODE
+
+
 }
 
 std::vector<size_t> Matrix::getReducingColumns( const Matrix_t &m )
@@ -208,6 +210,9 @@ std::vector<size_t> Matrix::getReducingColumns( const Matrix_t &m )
     for( size_t i = 0; i < m.at(0).size(); ++i )
         for( size_t j = 0; j < m.at(0).size(); ++j )
         {
+            if( i == j )
+                continue;
+
             bool covering = true;
             for( size_t k = 0; k < m.size(); ++k )
                 if( m[k][j].value == 1 && m[k][i].value == 0 )
