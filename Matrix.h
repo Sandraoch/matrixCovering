@@ -13,14 +13,15 @@ public:
 class Matrix {
 public:
 	typedef std::vector<std::vector<Ellement_t>> Matrix_t;
+    typedef std::vector<size_t> ListOfIndexes_t;
 private:
 	Matrix_t mOriginal;
 	Matrix_t mPrepared;
-	std::vector<size_t> preparedRows;
+    ListOfIndexes_t preparedRows;
     void deleteRowsAndCoveredColumns(std::vector<size_t>& r, Matrix_t &m);
-    std::vector<size_t> getKernelRows( const Matrix_t& m );
-    std::vector<size_t> getReducingColumns( const Matrix_t& m );
-    std::vector<size_t> getReducingRows( const Matrix_t& m );
+    ListOfIndexes_t getKernelRows( const Matrix_t& m );
+    ListOfIndexes_t getReducingColumns( const Matrix_t& m );
+    ListOfIndexes_t getReducingRows( const Matrix_t& m );
     void deleteColumns(std::vector<size_t>& c, Matrix_t &m);
 public:
     Matrix_t getOriginalMatrix();
