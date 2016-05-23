@@ -106,11 +106,12 @@ void Matrix::deleteRowsAndCoveredColumns( Matrix::ListOfIndexes_t& r, Matrix_t &
                 deleteColumns.push_back(j);
 	}
 
-	std::sort(deleteRows.begin(), deleteRows.end());
+    std::sort(deleteRows.begin(), deleteRows.end());
 
     for (int i = deleteRows.size() - 1; i >= 0; --i)
         std::swap(m[deleteRows[i]], m[prepSize - i - 1]);
 	
+
     m.erase(m.begin() + (prepSize - deleteRows.size()), m.end());
 
     std::set<ListOfIndexes_t::value_type> uniqueColomns( deleteColumns.begin(), deleteColumns.end() );
