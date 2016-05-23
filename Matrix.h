@@ -18,11 +18,11 @@ private:
 	Matrix_t mOriginal;
 	Matrix_t mPrepared;
     ListOfIndexes_t preparedRows;
-    void deleteRowsAndCoveredColumns(std::vector<size_t>& r, Matrix_t &m);
+    void deleteRowsAndCoveredColumns(ListOfIndexes_t& r, Matrix_t &m);
     ListOfIndexes_t getKernelRows( const Matrix_t& m );
     ListOfIndexes_t getReducingColumns( const Matrix_t& m );
     ListOfIndexes_t getReducingRows( const Matrix_t& m );
-    void deleteColumns(std::vector<size_t>& c, Matrix_t &m);
+    void deleteColumns(ListOfIndexes_t& c, Matrix_t &m);
 public:
     Matrix_t getOriginalMatrix();
     Matrix_t getPreparedMatrix();
