@@ -137,7 +137,7 @@ void Matrix::printMatrix(const Matrix_t & m, std::ostream & oStream )
 	for (const auto &row : m)
 	{
 		oStream << '\n';
-        oStream << (row[0].row + 1) << '\t';
+        oStream << (row[0].row + 1) << "|\t";
 		for (const auto & ell : row)
 			oStream << (int)ell.value << '\t';
 	}
@@ -191,12 +191,50 @@ Matrix::Matrix_t Matrix::getPreparedMatrix()
 
 void Matrix::reduceAsColumns()
 {
-//TODO: make it work
+    std::vector<size_t> reducingColomns = getReducingColumns( mPrepared );
+
+#ifdef DEBUG_MODE
+    std::cerr << "\n Reducing colomns:\n";
+    for( const auto &reduce : reducingColomns )
+        std::cerr << (mPrepared[0][reduce].col + 1) << '\t';
+    std::cerr << std::endl;
+#endif //DEBUG_MODE
 }
 
 std::vector<size_t> Matrix::getReducingColumns( const Matrix_t &m )
 {
     std::vector<size_t> answ;
+    
+    for( size_t i = 0; i < m.at(0).size(); ++i )
+        for( size_t j = 0; j < m.at(0).size(); ++j )
+        {
+            bool covering = true;
+            for( size_t k = 0; k < m.size(); ++k )
+                if( m[k][j].value == 1 && m[k][i].value == 0 )
+                {
+                    covering = false;
+                    break;
+                }
 
+            if( covering )
+            {
+                size_t onesOnFst = 0, onesInSnd = 0;
+                for( size_t k = 0; k < m.size(); ++k )
+                {
+                    if( m[k][i].value == 1 )
+                        ++onesOnFst;
+
+                    if( m[k][j].value == 1 )
+                        ++onesInSnd;
+                }
+
+                if( onesOnFst >= onesInSnd )
+                {
+                    answ.push_back( i );
+                    break;
+                }
+            }
+        }
+    
     return answ;
 }
