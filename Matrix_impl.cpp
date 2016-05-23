@@ -66,8 +66,8 @@ Matrix::Matrix(std::string filePath)
 
 void Matrix::prepare()
 {
-	if (!mPrepared.size() || !mPrepared.at(0).size())
-		throw std::logic_error("Empty matrix ");
+    if (!mPrepared.size() || !mPrepared.at(0).size())
+        throw std::logic_error("Empty matrix ");
 
     auto kernel = getKernelRows( mPrepared );
     preparedRows.insert( preparedRows.end(), kernel.begin(), kernel.end() );
@@ -88,7 +88,6 @@ void Matrix::prepare()
     std::cerr << "\nAfter deleteRowsAndCoveredColomns(preparedRows);\n";
     printMatrix(mPrepared, std::cerr);
 #endif //DEBUG_MODE
-
 }
 
 void Matrix::deleteRowsAndCoveredColumns( std::vector<size_t>& r, Matrix_t &m )
@@ -200,6 +199,12 @@ void Matrix::reduceAsColumns()
     std::cerr << std::endl;
 #endif //DEBUG_MODE
 
+    this->deleteColumns( reducingColomns, mPrepared );
+
+#ifdef DEBUG_MODE
+    std::cerr << "\nAfter deleting reducing colomns:\n";
+    printMatrix(mPrepared, std::cerr);
+#endif //DEBUG_MODE
 
 }
 
@@ -242,4 +247,32 @@ std::vector<size_t> Matrix::getReducingColumns( const Matrix_t &m )
         }
     
     return answ;
+}
+
+
+Matrix::Matrix_t Matrix::reduceAll()
+{
+    size_t curSize = mPrepared.size() + 1;
+
+    this->prepare();
+
+    while( curSize > mPrepared.size() )
+    {
+        curSize = mPrepared.size();
+
+        reduceAsColumns();
+        reduceAsRows();
+
+
+    }
+}
+
+void Matrix::reduceAsRows()
+{
+
+}
+
+std::vector<size_t> Matrix::getReducingRows( const Matrix_t &m )
+{
+
 }

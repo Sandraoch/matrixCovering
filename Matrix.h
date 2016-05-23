@@ -20,6 +20,7 @@ private:
     void deleteRowsAndCoveredColumns(std::vector<size_t>& r, Matrix_t &m);
     std::vector<size_t> getKernelRows( const Matrix_t& m );
     std::vector<size_t> getReducingColumns( const Matrix_t& m );
+    std::vector<size_t> getReducingRows( const Matrix_t& m );
     void deleteColumns(std::vector<size_t>& c, Matrix_t &m);
 public:
     Matrix_t getOriginalMatrix();
@@ -27,7 +28,10 @@ public:
 	void printMatrix( const Matrix_t & m, std::ostream & oStr );
 	void prepare();
     void reduceAsColumns();
+    void reduceAsRows();
 	Matrix(std::string filePath);
+
+    Matrix_t reduceAll();
 };
 
 #endif
