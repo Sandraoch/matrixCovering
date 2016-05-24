@@ -166,7 +166,7 @@ void Matrix::deleteColumns(Matrix::ListOfIndexes_t &c, Matrix_t &m)
 		/// Но при удалении они будут сдвигаться, поэтому приходится делать -i,
 		/// где i считает количество удалённых столбцов.
 		for (auto &row : m)
-			row.erase(row.begin() + col - i);
+			row.erase(row.begin() + (col - i));
 		++i;
 	}
 }
