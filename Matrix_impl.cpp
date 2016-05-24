@@ -68,31 +68,38 @@ Matrix::Matrix(std::string filePath)
 
 void Matrix::prepare()
 {
-    if (!mPrepared.size() || !mPrepared.at(0).size())
-        throw std::logic_error( "Empty matrix " );
+	if (!mPrepared.size() || !mPrepared.at(0).size())
+		throw std::logic_error("Empty matrix ");
 
 	auto kernel = getKernelRows(mPrepared);
-	preparedRows.insert(preparedRows.end(), kernel.begin(), kernel.end());// запоминаем ядерные строки
+	rowsInCovering.insert(rowsInCovering.end(),
+		kernel.begin(),
+		kernel.end()
+	);// запоминаем ядерные строки, добавляя их в конец уже имеющегося покрытия 
 
 #ifdef DEBUG_MODE
-	std::cerr << "\nBefore deleteRowsAndCoveredColomns( preparedRows );\n";
-	std::cerr << "preparedRows: " << std::endl;
+	std::cerr << "\nBefore deleteRowsAndCoveredColomns( rowsInCovering );\n";
+	std::cerr << "rowsInCovering: " << std::endl;
 
-	for (auto &col : preparedRows)
+	for (auto &col : rowsInCovering)
 		std::cerr << (col + 1) << '\t';
 	std::cerr << std::endl;
 	printMatrix(mPrepared, std::cerr);
 #endif //DEBUG_MODE
 
-	deleteRowsAndCoveredColumns(preparedRows, mPrepared);// уд
+	deleteRowsAndCoveredColumns(rowsInCovering, mPrepared);
 
 #ifdef DEBUG_MODE
-	std::cerr << "\nAfter deleteRowsAndCoveredColomns(preparedRows);\n";
+	std::cerr << "\nAfter deleteRowsAndCoveredColomns(rowsInCovering);\n";
 	printMatrix(mPrepared, std::cerr);
 #endif //DEBUG_MODE
 }
 
-void Matrix::deleteRowsAndCoveredColumns(Matrix::ListOfIndexes_t& r, Matrix_t &m)// удаляет строки из матрицы , строки , индыксы которых указаны в списке индексов р, а также столбцы , которые этими строками покрывались
+void Matrix::deleteRowsAndCoveredColumns(
+	Matrix::ListOfIndexes_t& r,
+	Matrix_t &m
+)/// удаляет строки из матрицы, строки, индексы которых указаны в списке индексов р,
+/// а также столбцы, которые этими строками покрывались
 {
 	size_t prepSize = m.size();
 	std::sort(r.begin(), r.end());
@@ -110,10 +117,12 @@ void Matrix::deleteRowsAndCoveredColumns(Matrix::ListOfIndexes_t& r, Matrix_t &m
 	for (int i = deleteRows.size() - 1; i >= 0; --i)
 		std::swap(m[deleteRows[i]], m[prepSize - i - 1]);// удаляемые строчки в конец 
 
-	m.erase(m.begin() + (prepSize - deleteRows.size()), m.end());//удаляем строчик ,которые мы переместили вниз
+	m.erase(m.begin() + (prepSize - deleteRows.size()),
+		m.end()); //удаляем строчик ,которые мы переместили вниз
 
 	std::set<ListOfIndexes_t::value_type> uniqueColomns(deleteColumns.begin(), deleteColumns.end());
-	deleteColumns = ListOfIndexes_t(uniqueColomns.begin(), uniqueColomns.end());//Отсортировали и удалили одинаковые индексы.
+	deleteColumns = ListOfIndexes_t(uniqueColomns.begin(),
+		uniqueColomns.end());//Отсортировали и удалили одинаковые индексы.
 
 #ifdef DEBUG_MODE
 	std::cerr << "deleteColumns: " << std::endl;
@@ -121,6 +130,7 @@ void Matrix::deleteRowsAndCoveredColumns(Matrix::ListOfIndexes_t& r, Matrix_t &m
 	for (auto &col : deleteColumns)
 		std::cerr << (col + 1) << '\t';
 #endif
+
 	this->deleteColumns(deleteColumns, mPrepared);
 }
 
@@ -143,16 +153,20 @@ void Matrix::printMatrix(const Matrix_t & m, std::ostream & oStream)
 			oStream << (int)ell.value << '\t';
 	}
 	oStream << '\n';
-
 }
 
 void Matrix::deleteColumns(Matrix::ListOfIndexes_t &c, Matrix_t &m)
 {
 	size_t i = 0;
-	for (const auto &col : c)
+	std::sort(c.begin(), c.end());
+
+	for (const auto &col : c)// идем по каждому из индесов удаляемых столбцов
 	{
+		/// удаляем в каждой строчке заданный столбец.
+		/// Но при удалении они будут сдвигаться, поэтому приходится делать -i,
+		/// где i считает количество удалённых столбцов.
 		for (auto &row : m)
-			row.erase(row.begin() + col - i);
+			row.erase(row.begin() + (col - i));
 		++i;
 	}
 }
@@ -160,13 +174,13 @@ void Matrix::deleteColumns(Matrix::ListOfIndexes_t &c, Matrix_t &m)
 Matrix::ListOfIndexes_t Matrix::getKernelRows(const Matrix_t& m)
 {
 	Matrix::ListOfIndexes_t answ;
-	for (size_t j = 0; j < m.at(0).size(); ++j)
+	for (size_t j = 0; j < m.at(0).size(); ++j)// идем по столбцу
 	{
-		size_t onesCount = 0;
+		size_t onesCount = 0;// счетчик 1 в столбце 
 		size_t curPreparedRow = -1;
-		for (size_t i = 0; i < m.size(); i++)
+		for (size_t i = 0; i < m.size(); i++)// по самому столбцу
 		{
-			if (m[i][j].value)
+			if (m[i][j].value == 1 )
 			{
 				++onesCount;
 				curPreparedRow = i;
@@ -177,7 +191,7 @@ Matrix::ListOfIndexes_t Matrix::getKernelRows(const Matrix_t& m)
 			answ.push_back(curPreparedRow);
 	}
 
-	return answ;
+	return answ;// запоминаем индекс ядерной строки
 }
 
 Matrix::Matrix_t Matrix::getOriginalMatrix()
@@ -217,7 +231,7 @@ Matrix::ListOfIndexes_t Matrix::getReducingColumns(const Matrix_t &m)
 {
 	Matrix::ListOfIndexes_t answ;
 
-	for (size_t i = 0; i < m.at(0).size(); ++i)
+	for (size_t i = 0; i < m.at(0).size(); ++i)// сравнивам итый и джитый столбцец, и не равно джи
 		for (size_t j = 0; j < m.at(0).size(); ++j)
 		{
 			if (i == j)
@@ -226,6 +240,7 @@ Matrix::ListOfIndexes_t Matrix::getReducingColumns(const Matrix_t &m)
 			bool covering = true;
 			for (size_t k = 0; k < m.size(); ++k)
 				if (m[k][j].value == 1 && m[k][i].value != 1)
+					//проверяем,чтобы не было случая когда в итом столбце 0, а в джитом 1
 				{
 					covering = false;
 					break;
@@ -233,7 +248,7 @@ Matrix::ListOfIndexes_t Matrix::getReducingColumns(const Matrix_t &m)
 
 			if (covering)
 			{
-				size_t onesOnFst = 0, onesInSnd = 0;
+				size_t onesOnFst = 0, onesInSnd = 0;// считаем единички в каждом столбце
 				for (size_t k = 0; k < m.size(); ++k)
 				{
 					if (m[k][i].value == 1)
@@ -286,7 +301,7 @@ void Matrix::reduceAsRows()
 	if (reducingRows.empty())
 		return;
 
-	this->preparedRows.insert(preparedRows.end(), reducingRows.begin(), reducingRows.end());
+	this->rowsInCovering.insert(rowsInCovering.end(), reducingRows.begin(), reducingRows.end());
 	this->deleteRowsAndCoveredColumns(reducingRows, mPrepared);
 
 #ifdef DEBUG_MODE
@@ -325,7 +340,7 @@ Matrix::ListOfIndexes_t Matrix::getReducingRows(const Matrix_t &m)
 						++onesInSnd;
 				}
 
-				if (onesOnFst >= onesInSnd)
+				if (onesOnFst <= onesInSnd)
 				{
 					answer.push_back(i);
 					break;
