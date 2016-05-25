@@ -1,5 +1,5 @@
 #include <iostream>
-#define DEBUG_MODE
+//#define DEBUG_MODE
 #include "Matrix.h"
 #include <fstream>
 

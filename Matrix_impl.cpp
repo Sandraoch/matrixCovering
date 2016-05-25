@@ -136,7 +136,7 @@ void Matrix::deleteRowsAndCoveredColumns(
 
 void Matrix::printMatrix(const Matrix_t & m, std::ostream & oStream)
 {
-	if (m.empty())
+    if (m.empty() || m.at(0).empty() )
 	{
 		oStream << "\nEmpty matrix\n";
 		return;
@@ -276,7 +276,7 @@ Matrix::Matrix_t Matrix::reduceAll()
 
 	this->prepare();
 
-	while (curSize > mPrepared.size())
+    while (curSize > mPrepared.size() && curSize > 0 )
 	{
 		curSize = mPrepared.size();
 
