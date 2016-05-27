@@ -8,6 +8,8 @@
 
 #include "Matrix.h"
 
+#define DEBUG_MODE
+
 Ellement_t::Ellement_t(size_t row, size_t col, unsigned char val)
 {
 	this->row = row;
@@ -99,7 +101,7 @@ void Matrix::deleteRowsAndCoveredColumns(
 	Matrix::ListOfIndexes_t& r,
 	Matrix_t &m
 )/// удаляет строки из матрицы, строки, индексы которых указаны в списке индексов р,
-/// а также столбцы, которые этими строками покрывались
+ /// а также столбцы, которые этими строками покрывались
 {
 	size_t prepSize = m.size();
 	std::sort(r.begin(), r.end());
@@ -128,7 +130,7 @@ void Matrix::deleteRowsAndCoveredColumns(
 	std::cerr << "deleteColumns: " << std::endl;
 
 	for (auto &col : deleteColumns)
-		std::cerr << (col + 1) << '\t';
+		std::cerr << (mPrepared[0][col].col + 1) << '\t';
 #endif
 
 	this->deleteColumns(deleteColumns, mPrepared);
@@ -136,7 +138,7 @@ void Matrix::deleteRowsAndCoveredColumns(
 
 void Matrix::printMatrix(const Matrix_t & m, std::ostream & oStream)
 {
-    if (m.empty() || m.at(0).empty() )
+	if (m.empty() || m.at(0).empty())
 	{
 		oStream << "\nEmpty matrix\n";
 		return;
@@ -180,7 +182,7 @@ Matrix::ListOfIndexes_t Matrix::getKernelRows(const Matrix_t& m)
 		size_t curPreparedRow = -1;
 		for (size_t i = 0; i < m.size(); i++)// по самому столбцу
 		{
-			if (m[i][j].value == 1 )
+			if (m[i][j].value == 1)
 			{
 				++onesCount;
 				curPreparedRow = i;
@@ -206,6 +208,9 @@ Matrix::Matrix_t Matrix::getPreparedMatrix()
 
 void Matrix::reduceAsColumns()
 {
+	if (mPrepared.empty())
+		return;
+
 	Matrix::ListOfIndexes_t reducingColomns = getReducingColumns(mPrepared);
 
 #ifdef DEBUG_MODE
@@ -272,13 +277,21 @@ Matrix::ListOfIndexes_t Matrix::getReducingColumns(const Matrix_t &m)
 
 Matrix::Matrix_t Matrix::reduceAll()
 {
-	size_t curSize = mPrepared.size() + 1;//количество строк в данный момент
+	if (!mPrepared.empty() && mPrepared.at(0).empty())
+		mPrepared.clear();
+
+	size_t lastSize = mPrepared.empty() ? 0 : std::max(mPrepared.size(), mPrepared.at(0).size());
+	//Максимальный размер матрицы в данный момент
+	size_t curSize = lastSize + 1;
 
 	this->prepare();
 
-    while (curSize > mPrepared.size() && curSize > 0 )
+	while (curSize > mPrepared.size() && curSize > 0)
 	{
-		curSize = mPrepared.size();
+		if (!mPrepared.empty() && mPrepared.at(0).empty())
+			mPrepared.clear();
+
+		curSize = mPrepared.empty() ? 0 : std::max( mPrepared.size(), mPrepared.at(0).size() );
 
 		reduceAsColumns();
 		reduceAsRows();
@@ -287,8 +300,28 @@ Matrix::Matrix_t Matrix::reduceAll()
 	return mPrepared;
 }
 
+void Matrix::deleteRows(ListOfIndexes_t &rows, Matrix_t &m)
+{
+	auto unique = std::set<ListOfIndexes_t::value_type>(rows.begin(), rows.end());
+	rows = ListOfIndexes_t(unique.begin(), unique.end());
+	for (size_t i = 0; i < rows.size(); ++i )
+		m.erase(m.begin() + (rows[i] - i));
+	
+#ifdef DEBUG_MODE
+	std::cerr << "\nAfter deleting rows:\n";
+	this->printMatrix(mPrepared, std::cerr);
+#endif //DEBUG_MODE
+}
+
 void Matrix::reduceAsRows()
 {
+	if (mPrepared.empty())
+		return;
+
+	Matrix::ListOfIndexes_t ker = getKernelRows(mPrepared);
+	this->rowsInCovering.insert(rowsInCovering.end(), ker.begin(), ker.end());
+	this->deleteRowsAndCoveredColumns(ker, mPrepared);
+
 	Matrix::ListOfIndexes_t reducingRows = getReducingRows(mPrepared);
 
 #ifdef DEBUG_MODE
@@ -301,8 +334,7 @@ void Matrix::reduceAsRows()
 	if (reducingRows.empty())
 		return;
 
-	this->rowsInCovering.insert(rowsInCovering.end(), reducingRows.begin(), reducingRows.end());
-	this->deleteRowsAndCoveredColumns(reducingRows, mPrepared);
+	deleteRows(reducingRows, mPrepared);
 
 #ifdef DEBUG_MODE
 	std::cerr << "\nAfter deleting reducing rows:\n";
@@ -313,10 +345,31 @@ void Matrix::reduceAsRows()
 Matrix::ListOfIndexes_t Matrix::getReducingRows(const Matrix_t &m)
 {
 	Matrix::ListOfIndexes_t answer;
+	if (m.empty() || m[0].empty())
+	{
+		//m.clear();
+		return answer;
+	}
+	for (size_t i = 0; i < m.size(); ++i)
+		for (size_t j = i + 1; j < m.size(); ++j)
+		{
+			bool equals = true;
+
+			for( size_t k = 0; k < m.at(0).size(); ++k )
+				if (m[i][k].value != m[j][k].value)
+				{
+					equals = false;
+					break;
+				}
+
+			if (equals)
+				answer.push_back(i);
+		}
+
 	for (size_t i = 0; i < m.size(); ++i)
 		for (size_t j = 0; j < m.size(); ++j)
 		{
-			if (i == j)
+			if (i == j || std::find(answer.begin(), answer.end(), i) != answer.end() )
 				continue;
 
 			bool covering = true;
@@ -340,7 +393,7 @@ Matrix::ListOfIndexes_t Matrix::getReducingRows(const Matrix_t &m)
 						++onesInSnd;
 				}
 
-				if (onesOnFst <= onesInSnd)
+				if (onesOnFst < onesInSnd)
 				{
 					answer.push_back(i);
 					break;

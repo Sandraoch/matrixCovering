@@ -22,6 +22,7 @@ private:
 	ListOfIndexes_t getKernelRows(const Matrix_t& m);
 	ListOfIndexes_t getReducingColumns(const Matrix_t& m);
 	ListOfIndexes_t getReducingRows(const Matrix_t& m);
+	void deleteRows(ListOfIndexes_t &rows, Matrix_t &m);
 	void deleteColumns(ListOfIndexes_t& c, Matrix_t &m);
 public:
 	Matrix_t getOriginalMatrix();
