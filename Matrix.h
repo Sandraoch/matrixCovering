@@ -24,6 +24,7 @@ private:
 	ListOfIndexes_t getReducingRows(const Matrix_t& m);
 	void deleteRows(ListOfIndexes_t &rows, Matrix_t &m);
 	void deleteColumns(ListOfIndexes_t& c, Matrix_t &m);
+    void deleteRowWithMinimalOnesCount(Matrix_t &m);
 public:
 	Matrix_t getOriginalMatrix();
 	Matrix_t getPreparedMatrix();
@@ -31,6 +32,8 @@ public:
 	void prepare();
 	void reduceAsColumns();
 	void reduceAsRows();
+    ListOfIndexes_t getCurCovering();
+    bool isFullCovering( const ListOfIndexes_t &rows, const Matrix_t &matr );
 	Matrix(std::string filePath);
 
 	Matrix_t reduceAll();

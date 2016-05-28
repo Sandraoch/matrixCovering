@@ -5,14 +5,26 @@
 
 int main()
 {
-	Matrix matr("inputData.csv");
-	matr.reduceAll();
+    //Matrix matr("inputData_with_problem.csv");
+    Matrix matr("inputData.csv");
 
-	std::cerr << "\nMatrix after matr.reduceAll(); :\n";
+    matr.reduceAll();
 
-	std::ofstream out("res.txt");
+    Matrix::Matrix_t m = matr.getOriginalMatrix();
 
-	matr.printMatrix(matr.getPreparedMatrix(), out);
+    matr.printMatrix(m, std::cerr);
 
-	return EXIT_SUCCESS;
+    std::cerr << "\nCovering is:\n";
+
+    Matrix::ListOfIndexes_t covering = matr.getCurCovering();
+
+    for( const auto &row : covering )
+    {
+        std::cerr << int(m[row][0].row + 1) << "|\t";
+        for( const auto &el : m[row] )
+            std::cerr << (int)el.value  << '\t';
+        std::cerr << std::endl;
+    }
+
+    return EXIT_SUCCESS;
 }

@@ -8,4 +8,4 @@ CONFIG += C++11
 SOURCES += main.cpp Matrix_impl.cpp
 HEADERS += Matrix.h
 
-DEFINES += DEBUG_MODE
+#DEFINES += DEBUG_MODE

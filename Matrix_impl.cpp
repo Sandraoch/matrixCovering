@@ -8,7 +8,7 @@
 
 #include "Matrix.h"
 
-#define DEBUG_MODE
+//#define DEBUG_MODE
 
 Ellement_t::Ellement_t(size_t row, size_t col, unsigned char val)
 {
@@ -71,13 +71,13 @@ Matrix::Matrix(std::string filePath)
 void Matrix::prepare()
 {
 	if (!mPrepared.size() || !mPrepared.at(0).size())
-		throw std::logic_error("Empty matrix ");
+        //throw std::logic_error("Empty matrix ");
+        return;
 
-	auto kernel = getKernelRows(mPrepared);
-	rowsInCovering.insert(rowsInCovering.end(),
-		kernel.begin(),
-		kernel.end()
-	);// запоминаем ядерные строки, добавляя их в конец уже имеющегося покрытия 
+    ListOfIndexes_t kernel = getKernelRows(mPrepared);
+    // запоминаем ядерные строки, добавляя их в конец уже имеющегося покрытия
+    for( const auto & r : kernel )
+        rowsInCovering.push_back( mPrepared[r][0].row );
 
 #ifdef DEBUG_MODE
 	std::cerr << "\nBefore deleteRowsAndCoveredColomns( rowsInCovering );\n";
@@ -89,7 +89,7 @@ void Matrix::prepare()
 	printMatrix(mPrepared, std::cerr);
 #endif //DEBUG_MODE
 
-	deleteRowsAndCoveredColumns(rowsInCovering, mPrepared);
+    deleteRowsAndCoveredColumns(kernel, mPrepared);
 
 #ifdef DEBUG_MODE
 	std::cerr << "\nAfter deleteRowsAndCoveredColomns(rowsInCovering);\n";
@@ -180,7 +180,7 @@ Matrix::ListOfIndexes_t Matrix::getKernelRows(const Matrix_t& m)
 	{
 		size_t onesCount = 0;// счетчик 1 в столбце 
 		size_t curPreparedRow = -1;
-		for (size_t i = 0; i < m.size(); i++)// по самому столбцу
+        for (size_t i = 0; i < m.size(); ++i)// по самому столбцу
 		{
 			if (m[i][j].value == 1)
 			{
@@ -193,6 +193,8 @@ Matrix::ListOfIndexes_t Matrix::getKernelRows(const Matrix_t& m)
 			answ.push_back(curPreparedRow);
 	}
 
+    auto ker = std::set<ListOfIndexes_t::value_type>( answ.begin(), answ.end() );
+    answ = ListOfIndexes_t( ker.begin(), ker.end() );
 	return answ;// запоминаем индекс ядерной строки
 }
 
@@ -280,21 +282,30 @@ Matrix::Matrix_t Matrix::reduceAll()
 	if (!mPrepared.empty() && mPrepared.at(0).empty())
 		mPrepared.clear();
 
-	size_t lastSize = mPrepared.empty() ? 0 : std::max(mPrepared.size(), mPrepared.at(0).size());
+    size_t curSize = mPrepared.size() + (mPrepared.empty() ? 0 : mPrepared[0].size());
 	//Максимальный размер матрицы в данный момент
-	size_t curSize = lastSize + 1;
+    size_t lastSize = curSize + 1;
 
-	this->prepare();
+    prepare();
 
-	while (curSize > mPrepared.size() && curSize > 0)
+    while( !mPrepared.empty() )
 	{
-		if (!mPrepared.empty() && mPrepared.at(0).empty())
-			mPrepared.clear();
-
-		curSize = mPrepared.empty() ? 0 : std::max( mPrepared.size(), mPrepared.at(0).size() );
-
+        //prepare();
 		reduceAsColumns();
 		reduceAsRows();
+        prepare();
+
+        if (!mPrepared.empty() && mPrepared.at(0).empty())
+            mPrepared.clear();
+
+        lastSize = curSize;
+        curSize = mPrepared.size() + (mPrepared.empty() ? 0 : mPrepared[0].size());
+
+        if( lastSize == curSize && curSize > 0 )
+        {
+            deleteRowWithMinimalOnesCount( mPrepared );
+            prepare();
+        }
 	}
 
 	return mPrepared;
@@ -318,9 +329,9 @@ void Matrix::reduceAsRows()
 	if (mPrepared.empty())
 		return;
 
-	Matrix::ListOfIndexes_t ker = getKernelRows(mPrepared);
+    /*Matrix::ListOfIndexes_t ker = getKernelRows(mPrepared);
 	this->rowsInCovering.insert(rowsInCovering.end(), ker.begin(), ker.end());
-	this->deleteRowsAndCoveredColumns(ker, mPrepared);
+    this->deleteRowsAndCoveredColumns(ker, mPrepared);*/
 
 	Matrix::ListOfIndexes_t reducingRows = getReducingRows(mPrepared);
 
@@ -402,4 +413,39 @@ Matrix::ListOfIndexes_t Matrix::getReducingRows(const Matrix_t &m)
 		}
 
 	return answer;
+}
+
+bool Matrix::isFullCovering( const ListOfIndexes_t &rows, const Matrix_t &m )
+{
+    if( m.empty() )
+        return true;
+
+    for( size_t j = 0; j < m.at(0).size(); ++j )
+        if( std::find( rows.begin(), rows.end(), m[j][0].col) == rows.end() )
+            return false;
+
+    return true;
+}
+
+Matrix::ListOfIndexes_t Matrix::getCurCovering()
+{
+    std::sort( rowsInCovering.begin(), rowsInCovering.end() );
+    return rowsInCovering;
+}
+
+void Matrix::deleteRowWithMinimalOnesCount( Matrix_t &m)
+{
+    std::vector<size_t> onesCnts( m.size(), 0u );
+
+    for( size_t i = 0; i < m.size(); ++i )
+         onesCnts[i] = std::count_if( m[i].begin(), m[i].end(),
+                                      []( const Matrix_t::value_type::value_type & el) -> bool
+                                      {
+                                        return el.value == 1;
+                                      });
+    size_t indMin = std::minmax_element( onesCnts.begin(), onesCnts.end() ).first - onesCnts.begin();
+#ifdef DEBUG_MODE
+    std::cerr << "\nDelete " << (m[indMin][0].row + 1 ) << " row.\n";
+#endif //DEBUG_MODE
+    m.erase( m.begin() + indMin );
 }
