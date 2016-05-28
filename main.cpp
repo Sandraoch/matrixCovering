@@ -10,20 +10,23 @@ int main()
 
     matr.reduceAll();
 
+    std::fstream fStream( "res.txt" );
+
     Matrix::Matrix_t m = matr.getOriginalMatrix();
 
-    matr.printMatrix(m, std::cerr);
+    fStream << "\nOriginal matrix:\n";
+    matr.printMatrix(m, fStream);
 
-    std::cerr << "\nCovering is:\n";
+    fStream << "\nCovering is:\n";
 
     Matrix::ListOfIndexes_t covering = matr.getCurCovering();
 
     for( const auto &row : covering )
     {
-        std::cerr << int(m[row][0].row + 1) << "|\t";
+        fStream << int(m[row][0].row + 1) << "|\t";
         for( const auto &el : m[row] )
-            std::cerr << (int)el.value  << '\t';
-        std::cerr << std::endl;
+            fStream << (int)el.value  << '\t';
+        fStream << std::endl;
     }
 
     return EXIT_SUCCESS;
