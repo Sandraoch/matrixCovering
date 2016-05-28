@@ -127,10 +127,13 @@ void Matrix::deleteRowsAndCoveredColumns(
 		uniqueColomns.end());//Отсортировали и удалили одинаковые индексы.
 
 #ifdef DEBUG_MODE
-	std::cerr << "deleteColumns: " << std::endl;
+    if( !mPrepared.empty() )
+    {
+        std::cerr << "deleteColumns: " << std::endl;
 
-	for (auto &col : deleteColumns)
-		std::cerr << (mPrepared[0][col].col + 1) << '\t';
+        for (auto &col : deleteColumns)
+            std::cerr << (mPrepared[0][col].col + 1) << '\t';
+    }
 #endif
 
 	this->deleteColumns(deleteColumns, mPrepared);
