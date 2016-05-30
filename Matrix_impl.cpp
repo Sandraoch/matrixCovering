@@ -446,7 +446,7 @@ void Matrix::deleteRowWithMinimalOnesCount( Matrix_t &m)
                                       {
                                         return el.value == 1;
                                       });
-    size_t indMin = std::minmax_element( onesCnts.begin(), onesCnts.end() ).first - onesCnts.begin();
+    size_t indMin = std::min_element( onesCnts.begin(), onesCnts.end() ) - onesCnts.begin();
 #ifdef DEBUG_MODE
     std::cerr << "\nDelete " << (m[indMin][0].row + 1 ) << " row.\n";
 #endif //DEBUG_MODE
