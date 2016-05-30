@@ -241,7 +241,28 @@ Matrix::ListOfIndexes_t Matrix::getReducingColumns(const Matrix_t &m)
 {
 	Matrix::ListOfIndexes_t answ;
 
-	for (size_t i = 0; i < m.at(0).size(); ++i)// сравнивам итый и джитый столбцец, и не равно джи
+    for (size_t i = 0; i < m.at(0).size(); ++i)
+        for (size_t j = i + 1; j < m.at(0).size(); ++j)
+        {
+            bool equals = true;
+
+            for( size_t k = 0; k < m.size(); ++k )
+                if (m[k][i].value != m[k][j].value)
+                {
+                    equals = false;
+                    break;
+                }
+
+            if (equals)
+                answ.push_back(i);
+        }
+
+    for (size_t i = 0; i < m.at(0).size(); ++i)
+    {
+        // сравнивам итый и джитый столбцец, и не равно джи
+        if(std::find(answ.begin(), answ.end(), i) != answ.end())
+            continue;
+
 		for (size_t j = 0; j < m.at(0).size(); ++j)
 		{
 			if (i == j)
@@ -275,6 +296,7 @@ Matrix::ListOfIndexes_t Matrix::getReducingColumns(const Matrix_t &m)
 				}
 			}
 		}
+    }
 
 	return answ;
 }
@@ -364,7 +386,8 @@ Matrix::ListOfIndexes_t Matrix::getReducingRows(const Matrix_t &m)
 		//m.clear();
 		return answer;
 	}
-	for (size_t i = 0; i < m.size(); ++i)
+
+    for (size_t i = 0; i < m.size(); ++i)
 		for (size_t j = i + 1; j < m.size(); ++j)
 		{
 			bool equals = true;
@@ -381,9 +404,13 @@ Matrix::ListOfIndexes_t Matrix::getReducingRows(const Matrix_t &m)
 		}
 
 	for (size_t i = 0; i < m.size(); ++i)
+    {
+        if(std::find(answer.begin(), answer.end(), i) != answer.end())
+            continue;
+
 		for (size_t j = 0; j < m.size(); ++j)
 		{
-			if (i == j || std::find(answer.begin(), answer.end(), i) != answer.end() )
+            if (i == j )
 				continue;
 
 			bool covering = true;
@@ -414,6 +441,7 @@ Matrix::ListOfIndexes_t Matrix::getReducingRows(const Matrix_t &m)
 				}
 			}
 		}
+    }
 
 	return answer;
 }
