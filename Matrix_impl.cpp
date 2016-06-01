@@ -103,10 +103,11 @@ void Matrix::deleteRowsAndCoveredColumns(
 )/// удаляет строки из матрицы, строки, индексы которых указаны в списке индексов р,
  /// а также столбцы, которые этими строками покрывались
 {
-	size_t prepSize = m.size();
-	std::sort(r.begin(), r.end());
+    //size_t prepSize = m.size();
+    //std::sort(r.begin(), r.end());
+    auto rSet = std::set<ListOfIndexes_t::value_type>( r.begin(), r.end() );
+    r = ListOfIndexes_t( rSet.begin(), rSet.end() );
 
-	Matrix::ListOfIndexes_t deleteRows = r;
 	Matrix::ListOfIndexes_t deleteColumns;
 
 	for (const auto &row : r)// проходимся по индексам строк
@@ -116,27 +117,37 @@ void Matrix::deleteRowsAndCoveredColumns(
 				deleteColumns.push_back(j);// запоминаем столбцы которые хотим удалить
 	}
 
-	for (int i = deleteRows.size() - 1; i >= 0; --i)
-		std::swap(m[deleteRows[i]], m[prepSize - i - 1]);// удаляемые строчки в конец 
-
-	m.erase(m.begin() + (prepSize - deleteRows.size()),
-		m.end()); //удаляем строчик ,которые мы переместили вниз
-
-	std::set<ListOfIndexes_t::value_type> uniqueColomns(deleteColumns.begin(), deleteColumns.end());
-	deleteColumns = ListOfIndexes_t(uniqueColomns.begin(),
-		uniqueColomns.end());//Отсортировали и удалили одинаковые индексы.
-
 #ifdef DEBUG_MODE
-    if( !mPrepared.empty() )
+    if( !m.empty() )
     {
-        std::cerr << "deleteColumns: " << std::endl;
+        std::cerr << "Delete rows and covered columns. Rows:\n";
+
+        for (auto &row : r)
+            std::cerr << (m[row][0].row + 1) << '\t';
+
+        std::cerr << "\n\ndeleteColumns: " << std::endl;
 
         for (auto &col : deleteColumns)
-            std::cerr << (mPrepared[0][col].col + 1) << '\t';
+            std::cerr << (m[0][col].col + 1) << '\t';
     }
 #endif
 
-	this->deleteColumns(deleteColumns, mPrepared);
+    /*for (int i = r.size() - 1; i >= 0; --i)
+        std::swap(m[r[i]], m[prepSize - i - 1]);// удаляемые строчки в конец
+
+    m.erase(m.begin() + (prepSize - r.size()),
+        m.end()); //удаляем строчик ,которые мы переместили вниз*/
+    for( size_t i = 0; i < r.size(); ++i )
+        m.erase( m.begin() + (r[i] - i) );
+
+    std::set<ListOfIndexes_t::value_type> uniqueColomns(
+                deleteColumns.begin(),
+                deleteColumns.end()
+                );
+	deleteColumns = ListOfIndexes_t(uniqueColomns.begin(),
+		uniqueColomns.end());//Отсортировали и удалили одинаковые индексы.
+
+    this->deleteColumns(deleteColumns, m);
 }
 
 void Matrix::printMatrix(const Matrix_t & m, std::ostream & oStream)
@@ -147,6 +158,7 @@ void Matrix::printMatrix(const Matrix_t & m, std::ostream & oStream)
 		return;
 	}
 
+    oStream << std::endl;
 	for (const auto & ell : m[0])
 		oStream << '\t' << (ell.col + 1);
 
@@ -479,4 +491,55 @@ void Matrix::deleteRowWithMinimalOnesCount( Matrix_t &m)
     std::cerr << "\nDelete " << (m[indMin][0].row + 1 ) << " row.\n";
 #endif //DEBUG_MODE
     m.erase( m.begin() + indMin );
+}
+
+void Matrix::makePreparedMatrixOriginal()
+{
+    mPrepared = mOriginal;
+    rowsInCovering.clear();
+}
+
+void Matrix::gradientMethod()
+{
+    Matrix_t& m = mPrepared;
+
+#ifdef DEBUG_MODE
+    std::cerr << "\nGradient method started.\n";
+    printMatrix( m, std::cerr );
+    //std::cerr << "\nm.size() = " << m.size() << std::endl;
+#endif //DEBUG_MODE
+    while( !m.empty() )
+    {
+        std::vector<size_t> onesCnts( m.size() );
+
+#ifdef DEBUG_MODE
+    //printMatrix( m, std::cerr );
+    printMatrix( m, std::cerr );
+#endif //DEBUG_MODE
+
+        for( size_t i = 0; i < m.size(); ++i )
+            onesCnts[i] = std::count_if( m[i].begin(), m[i].end(),
+                                            []( const Ellement_t & el) -> bool
+                                            {
+                                                return el.value == 1;
+                                            });
+
+        size_t deleted = 0;
+        for( size_t i = 0; i < onesCnts.size(); ++i )
+            if( onesCnts[i] == 0 )
+            {
+                m.erase( m.begin() + (i - deleted) );
+                ++deleted;
+            }
+
+        if( deleted > 0 )
+            continue;
+
+        size_t indMax = std::max_element( onesCnts.begin(), onesCnts.end() ) - onesCnts.begin();
+
+        rowsInCovering.push_back( m[indMax][0].row );
+
+        auto rows = ListOfIndexes_t{indMax};
+        deleteRowsAndCoveredColumns( rows, m );
+    }
 }

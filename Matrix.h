@@ -34,6 +34,8 @@ public:
 	void reduceAsRows();
     ListOfIndexes_t getCurCovering();
     bool isFullCovering( const ListOfIndexes_t &rows, const Matrix_t &matr );
+    void makePreparedMatrixOriginal();
+    void gradientMethod();
 	Matrix(std::string filePath);
 
 	Matrix_t reduceAll();
